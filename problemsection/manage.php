@@ -38,6 +38,7 @@ require_once("lib.php");
 // Arguments.
 $courseid = required_param('id', PARAM_INT);
 $deletedproblemsectionid = optional_param('delete', 0, PARAM_INT);
+$deletedproblemsectionaction = optional_param('mode', null, PARAM_RAW);
 
 // Access control.
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
@@ -64,17 +65,50 @@ $PAGE->set_heading($title);
 // Deleting the problem section.
 if ($deletedproblemsectionid && confirm_sesskey()) {
     $deletionparams = array('id' => $deletedproblemsectionid, 'courseid' => $courseid);
-    $deletedproblemsection = $DB->get_record('local_problemsection', $deletionparams);
-    if ($deletedproblemsection) {
-        $deletedsection = $DB->get_record('course_sections', array('id' => $deletedproblemsection->sectionid));
-        // Get section_info object with all availability options.
-        $sectionnum = $deletedsection->section;
-        $sectioninfo = get_fast_modinfo($course)->get_section_info($sectionnum);
+    
+    if($deletedproblemsectionaction == "task"){
+        $deletedproblemsection = $DB->get_record('local_problemsection', $deletionparams);
+        if ($deletedproblemsection) {
+            $deletedsection = $DB->get_record('course_sections', array('id' => $deletedproblemsection->sectionid));
+            // Get section_info object with all availability options.
+            $sectionnum = $deletedsection->section;
+            $sectioninfo = get_fast_modinfo($course)->get_section_info($sectionnum);
 
-        if (course_can_delete_section($course, $sectioninfo)) {
+            if (course_can_delete_section($course, $sectioninfo)) {
+                $confirm = optional_param('confirm', false, PARAM_BOOL) && confirm_sesskey();
+                if ($confirm) {
+                    local_problemsection_delete($deletedproblemsection, $course, $sectioninfo);
+                    redirect($manageurl);
+                } else {
+                    $strdelete = get_string('deleteproblemsection', 'local_problemsection');
+                    $PAGE->navbar->add($strdelete);
+                    $PAGE->set_title($strdelete);
+                    $PAGE->set_heading($course->fullname);
+                    echo $OUTPUT->header();
+                    echo $OUTPUT->box_start('noticebox');
+                    $optionsyes = array('id' => $courseid, 'confirm' => 1,
+                        'delete' => $deletedproblemsectionid, 'sesskey' => sesskey());
+                    $deleteurl = new moodle_url('/local/problemsection/manage.php', $optionsyes);
+                    $formcontinue = new single_button($deleteurl, get_string('deleteproblemsection', 'local_problemsection'));
+                    $formcancel = new single_button($manageurl, get_string('cancel'), 'get');
+                    echo $OUTPUT->confirm(get_string('warningdelete', 'local_problemsection',
+                        $deletedproblemsection->name), $formcontinue, $formcancel);
+                    echo $OUTPUT->box_end();
+                    echo $OUTPUT->footer();
+                    exit;
+                }
+            } else {
+                notice(get_string('nopermissions', 'error', get_string('deletesection')), $manageurl);
+            }
+        }
+    }
+    
+    if($deletedproblemsectionaction == "action"){
+        $deletedproblemsection = $DB->get_record('local_problemsection_groups', $deletionparams);
+        if ($deletedproblemsection) {
             $confirm = optional_param('confirm', false, PARAM_BOOL) && confirm_sesskey();
             if ($confirm) {
-                local_problemsection_delete($deletedproblemsection, $course, $sectioninfo);
+                local_problemsection_deleteaction($deletedproblemsectionid);
                 redirect($manageurl);
             } else {
                 $strdelete = get_string('deleteproblemsection', 'local_problemsection');
@@ -105,7 +139,10 @@ $addurl = "problemsection.php?id=$courseid";
 $commongroupsurl = "groups.php?id=$courseid&psid=";
 $groupactionsurl = "group_action.php?id=$courseid&psid=";
 $commonsubmissionsurl = "$CFG->wwwroot/mod/assign/view.php?action=grading&id=";
-$commondeleteurl = "manage.php?id=$courseid&sesskey=".s(sesskey())."&delete=";
+$commondeleteurl = "manage.php?id=$courseid&mode=task&sesskey=".s(sesskey())."&delete=";
+$commondeleteactionurl = "manage.php?id=$courseid&mode=action&sesskey=".s(sesskey())."&delete=";
+
+
 echo $OUTPUT->header();
 echo "<a href='$addurl'><button>".get_string('problemsection:addinstance', 'local_problemsection')."</button></a>";
 echo "<a href='$groupactionsurl'><button>".get_string('viewallgroup', 'local_problemsection')."</button></a>";
@@ -145,5 +182,37 @@ if ($problemsections) {
 } else {
     echo '<p>'.get_string('noproblemyet', 'local_problemsection').'</p>';
 }
+
+// -------------------------
+$problemsectionsactions = $DB->get_records('local_problemsection_groups', array('courseid' => $courseid));
+
+echo "<h4>Funções</h4>";
+if ($problemsectionsactions) {
+    echo '<table>';
+    echo '<tr>';
+    echo '<th>'.get_string('name').'</th>';
+    echo '<th>'."Data de execução".'</th>';
+    echo '<th>'."Tipo".'</th>';
+    echo '<th></th>';
+    echo '</tr>';
+    foreach ($problemsectionsactions as $problemsectionsaction) {
+        $nbgroups = $DB->count_records('groupings_groups',
+                array('groupingid' => $problemsection->groupingid));
+        $groupsurl = $commongroupsurl.$problemsection->id;
+        $assigncm = local_problemsection_get_assigncm($problemsection);
+        echo '<tr>';
+        echo "<td>".$problemsectionsaction->name."</td>";
+        echo "<td>".date('d/m/Y H:i:s', $problemsectionsaction->runtime)."</td>";
+        echo "<td>".$problemsectionsaction->action."</td>";
+        
+        echo "<td><a href='".$commondeleteactionurl.$problemsectionsaction->id."'><button>"
+                .get_string('deleteproblemsection', 'local_problemsection')."</button></a></td>";
+        echo '</tr>';
+    }
+    echo '</table>';
+} else {
+    echo '<p>'.get_string('noproblemyet', 'local_problemsection').'</p>';
+}
+
 echo "<a href='$CFG->wwwroot/course/view.php?id=$courseid'><button>".get_string('back')."</button></a>";
 echo $OUTPUT->footer();

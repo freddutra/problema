@@ -14,7 +14,7 @@ class groupaction_form extends moodleform {
 
         // Título
         $mform->addElement('text', 'name', get_string('name'));
-        $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255);
+        $mform->addRule('name', get_string('maximumchars', '', 99), 'maxlength', 99);
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
 

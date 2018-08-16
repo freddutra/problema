@@ -158,6 +158,11 @@ function local_problemsection_delete($problemsection, $course, $sectioninfo) {
     $DB->delete_records('local_problemsection', array('id' => $problemsection->id));
 }
 
+function local_problemsection_deleteaction($problemsection) {
+    global $DB;
+    $DB->delete_records('local_problemsection_groups', array('id' => $problemsection));
+}
+
 /**
  * Adds a section to the course, to host the problem. Then returns its id.
  * @param string $name

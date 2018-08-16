@@ -36,6 +36,7 @@ class run_reports extends \core\task\scheduled_task{
      *
      * @return string
      */
+    
     public function get_name() {
         // Shown in admin screens
         return get_string('pluginname', 'local_problemsection');
@@ -46,8 +47,9 @@ class run_reports extends \core\task\scheduled_task{
                 
         $timestamp = time(); // now
         
-        $cronresults = $DB->get_records("local_problemsection_groups",array('runtime'=>$timestamp, "status"=>1));
-        
+        //$cronresults = $DB->get_records("local_problemsection_groups",array('runtime'=>$timestamp, "status"=>1));
+        $cronresults = $DB->get_records("local_problemsection_groups",array('runtime'=>1534201561, "status"=>1));
+
         foreach($cronresults as $result){
             try {
                 
@@ -71,18 +73,30 @@ class run_reports extends \core\task\scheduled_task{
                 
                 // Dividir grupos
                 // 3
+                if($result->action == 3){
+                    $context = \context_course::instance($result->courseid);
+                    $students = get_role_users($result->courseid , $context);
+                    foreach($students as $student){
+                        mtrace("User > " . $student->id);
+                    }
+                    
+                    //mtrace("Rodou");
+                    //mtrace("Total de alunos " . "x");
+                    //mtrace("(dividido por 4) Seriam criados " . "x" . " grupos.");
+                    //mtrace("(dividido por 6) Seriam criados " . "x" . " grupos.");
+                }
                 
                 // Criar um tópico para cada aluno
                 // 4
                 
                 // Remove do aluno o direito de criar tópico em fóruns
                 if($result->action == 9){
-                    $DB->delete_records("role_capabilities",array('roleid'=>"5", "capability"=>"mod/forum:startdiscussion", "permission"=>1));
+                    //$DB->delete_records("role_capabilities",array('roleid'=>"5", "capability"=>"mod/forum:startdiscussion", "permission"=>1));
                 }
                 
                 // Concede ao aluno o direito de criar tópico em fóruns
                 if($result->action == 10){
-                    $DB->insert_record("role_capabilities",array('contextid'=>1, 'roleid'=>"5", "timemodified"=> $timestamp, "capability"=>"mod/forum:startdiscussion", "permission"=>1, "modifierid"=>0));
+                    //$DB->insert_record("role_capabilities",array('contextid'=>1, 'roleid'=>"5", "timemodified"=> $timestamp, "capability"=>"mod/forum:startdiscussion", "permission"=>1, "modifierid"=>0));
                 }
             }
             catch(\Exception $e) {
