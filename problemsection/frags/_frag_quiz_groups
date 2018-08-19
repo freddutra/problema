@@ -1,0 +1,46 @@
+
+    /*
+    // alocar em um grupo macro
+    $returnchoiceofcourse = $DB->get_record('choice', array('course'=>$courseid));
+    $returnchoicestudents = $DB->get_records('choice_answers', array('choiceid'=>$returnchoiceofcourse->id));
+
+    foreach($returnchoicestudents as $returnchoicestudent){ 
+        //echo $returnchoicestudent->userid . "<br>";
+        if($returnchoicestudent->optionid == 1){
+            //echo "opção 1";
+            // enviar aluno para o grupo 1 (se existir)
+            // se nao existir, criar o grupo
+            $getgroups = $DB->get_records("groups", array('courseid'=>$courseid));
+            foreach($getgroups as $getgroup){
+                // if group exist, insert
+                if(preg_match('/(\[DI]\b)(\w+)[1]\b/', $getgroup->name)){
+                    $group = groups_get_group($getgroup->id, 'id, courseid', MUST_EXIST);
+                    $user = $DB->get_record('user', array('id'=>$returnchoicestudent->userid, 'deleted'=>0, 'mnethostid'=>$CFG->mnet_localhost_id), '*', MUST_EXIST);
+                    //groups_add_member($group, $user);
+                    echo $returnchoicestudent->userid . " Add in " . $getgroup->id . "<br>";
+                    break;
+                }
+                // if group does not exist, create new
+                else{
+                    $data = new stdClass();
+                    $data->courseid = $courseid;
+                    $data->name = "[DI]1"; // must be avaliable in admin panel
+                    $creanewgroup = groups_create_group($data);
+                    
+                    //echo "grupo criado";
+                    
+                    $group = groups_get_group($creanewgroup, 'id, courseid', MUST_EXIST);
+                    $user = $DB->get_record('user', array('id'=>$returnchoicestudent->userid, 'deleted'=>0, 'mnethostid'=>$CFG->mnet_localhost_id), '*', MUST_EXIST);
+                    //groups_add_member($group, $user);
+                    echo $returnchoicestudent->userid . " Add in " . $creanewgroup . "<br>";
+                    
+                    break;
+                }
+            }
+        }
+        else{
+            
+        }
+    }
+    
+    */

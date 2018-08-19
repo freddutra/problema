@@ -18,5 +18,62 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
+    <!-- 
+      * local_problemsection_config
+      * armazena as configurações do sistema
+     -->
+    <TABLE NAME="local_problemsection_config" COMMENT="Armazena as configurações do sistema.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="studentspergroup" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newgroupnamestyle" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newsubgroupnamestype" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newpost" TYPE="char" LENGTH="5" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newsecondpost" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="firstgroup" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="secondgroup" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sectionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <!-- 
+      * local_problemsection_groups
+      * armazena runtimes para cron
+     -->
+    <TABLE NAME="local_problemsection_groups" COMMENT="Armazena runtimes para cron.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="runtime" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <!-- 
+      * local_problemsection_status
+      * armazena estatistica do módulo no curso
+     -->
+    <TABLE NAME="local_problemsection_status" COMMENT="Armazena estatistica do módulo no curso.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="presentationcreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="quizcreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="initialgroupcreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="groupscreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="forumcreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="postscreated" TYPE="binary" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>

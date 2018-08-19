@@ -138,23 +138,26 @@ $problemsections = $DB->get_records('local_problemsection', array('courseid' => 
 $addurl = "problemsection.php?id=$courseid";
 $commongroupsurl = "groups.php?id=$courseid&psid=";
 $groupactionsurl = "group_action.php?id=$courseid&psid=";
+$debateadminurl = "debateadm.php?id=$courseid&psid=";
 $commonsubmissionsurl = "$CFG->wwwroot/mod/assign/view.php?action=grading&id=";
 $commondeleteurl = "manage.php?id=$courseid&mode=task&sesskey=".s(sesskey())."&delete=";
 $commondeleteactionurl = "manage.php?id=$courseid&mode=action&sesskey=".s(sesskey())."&delete=";
 
-
 echo $OUTPUT->header();
 echo "<a href='$addurl'><button>".get_string('problemsection:addinstance', 'local_problemsection')."</button></a>";
-echo "<a href='$groupactionsurl'><button>".get_string('viewallgroup', 'local_problemsection')."</button></a>";
+echo "<a href='$groupactionsurl'><button>Adicionar ação</button></a>";
+echo "<a href='$debateadminurl'><button>Administrar modulo</button></a>";
+
+echo "<h4 class='debate-menage-header-style'>Atividades</h4>";
 if ($problemsections) {
-    echo '<table>';
+    echo '<table class="debate-menage-table">';
     echo '<tr>';
     echo '<th>'.get_string('name').'</th>';
     echo '<th>'.get_string('groups').'</th>';
     echo '<th>'.get_string('submissions', 'local_problemsection').'</th>';
     echo '<th>'.get_string('allowsubmissionsfromdate', 'assign').'</th>';
     echo '<th>'.get_string('duedate', 'assign').'</th>';
-    echo '<th></th>';
+    echo '<th>Ação</th>';
     echo '</tr>';
     foreach ($problemsections as $problemsection) {
         $nbgroups = $DB->count_records('groupings_groups',
@@ -185,15 +188,14 @@ if ($problemsections) {
 
 // -------------------------
 $problemsectionsactions = $DB->get_records('local_problemsection_groups', array('courseid' => $courseid));
-
-echo "<h4>Funções</h4>";
+echo "<h4 class='debate-menage-header-style'>Funções</h4>";
 if ($problemsectionsactions) {
-    echo '<table>';
+    echo '<table class="debate-menage-table">';
     echo '<tr>';
     echo '<th>'.get_string('name').'</th>';
     echo '<th>'."Data de execução".'</th>';
     echo '<th>'."Tipo".'</th>';
-    echo '<th></th>';
+    echo '<th>Ação</th>';
     echo '</tr>';
     foreach ($problemsectionsactions as $problemsectionsaction) {
         $nbgroups = $DB->count_records('groupings_groups',
@@ -214,5 +216,133 @@ if ($problemsectionsactions) {
     echo '<p>'.get_string('noproblemyet', 'local_problemsection').'</p>';
 }
 
-echo "<a href='$CFG->wwwroot/course/view.php?id=$courseid'><button>".get_string('back')."</button></a>";
+// ------------------------------------------------------------------
+echo "<h4 class='debate-menage-header-style'>Configuração do módulo</h4>";
+$moduleconfigadm = $DB->get_record('local_problemsection_config', array('courseid' => $courseid));
+if ($moduleconfigadm) {
+    echo '<table class="debate-menage-table">';
+    echo '<tr>';
+    echo '<th> Item </th>';
+    echo '<th> valor </th>';
+    echo '</tr>';
+
+    echo "<tr><td>Id curso</td><td>".$moduleconfigadm->courseid."</td></tr>";
+    echo "<tr><td>".get_string('studentspergroup', 'local_problemsection')."</td><td>".$moduleconfigadm->studentspergroup."</td></tr>";
+    echo "<tr><td>".get_string('newgroupnamestype', 'local_problemsection')."</td><td>".$moduleconfigadm->newgroupnamestyle."</td></tr>";
+    echo "<tr><td>".get_string('newsubgroupnamestype', 'local_problemsection')."</td><td>".$moduleconfigadm->newsubgroupnamestype."</td></tr>";
+    echo "<tr><td>".get_string('newpost', 'local_problemsection')."</td><td>".$moduleconfigadm->newpost."</td></tr>";
+    echo "<tr><td>".get_string('newsecondpost', 'local_problemsection')."</td><td>".$moduleconfigadm->newsecondpost."</td></tr>";
+    echo "<tr><td>Primeiro grupo</td><td>".$moduleconfigadm->firstgroup."</td></tr>";
+    echo "<tr><td>Segundo grupo</td><td>".$moduleconfigadm->secondgroup."</td></tr>";
+    echo "<tr><td>".get_string('moduleentry', 'local_problemsection')."</td><td>".$moduleconfigadm->sectionid."</td></tr>";
+
+    echo '</table>';
+} else {
+    echo '<p>'.get_string('noproblemyet', 'local_problemsection').'</p>';
+}
+
+// ------------------------------------------------------------------
+$modulestatus = $DB->get_record('local_problemsection_status', array("courseid"=>$courseid));
+echo "<h4 class='debate-menage-header-style'>Estatística do sistema</h4>";
+
+$createstatus = "blind/createstatus.php?id=$courseid";
+$createpresentation = "createpresentation.php?id=$courseid";
+$createquiz = "quizselect.php?id=$courseid";
+$createdebate = "selectsectiondebate.php?id=$courseid";
+
+if($modulestatus){
+    echo '<table class="debate-menage-table">';
+    echo '<tr>';
+    echo '<th> Descrição </th>';
+    echo '<th> Status </th>';
+    echo '<th> Ação </th>';
+    echo '</tr>';
+
+    echo "<tr>";
+        echo "<td>Criar/editar carta de apresentação do debate.</td>";
+        if($modulestatus->presentationcreated == 1){
+            echo "<td class='debate-manage-table-running'>Já configurada.</td>";
+            echo "<td><a href='$createpresentation'><button>Nova Carta de apresentação</button></a></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
+            echo "<td><a href='$createpresentation'><button>Criar Carta de apresentação</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>Criar quiz inicial.</td>";
+        if($modulestatus->quizcreated == 1){
+            echo "<td class='debate-manage-table-running'>Quiz já configurado.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
+            echo "<td><a href='$createquiz'><button>Criar quiz de seleção</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>Gerar grupos iniciais a partir do quiz criado.";
+        if($modulestatus->quizcreated == 0) {echo "<br><b>Não é possível criar os grupos iniciais: Quiz não inicializado.</b>";}
+        echo "</td>";
+        if($modulestatus->initialgroupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+            echo "<td><a href=''><button>Gerar grupos</button></a></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
+            if($modulestatus->quizcreated == 1) { echo "<td><a href=''><button>Gerar grupos</button></a></td>";}
+            else{echo "<td><a href=''><button>Gerar grupos</button></a></td>";}
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>Gerar grupos secundários a partir do primeiro (divisão para debate).</td>";
+        if($modulestatus->groupscreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
+            echo "<td><a href='$createdebate'><button>Gerar grupos</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>Fórum de debate (defesa e refutação).</td>";
+        if($modulestatus->forumcreated == 1){
+            echo "<td class='debate-manage-table-running'>Fórum criado com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar fórum.</td>";
+            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>Posts de debate (defesa).</td>";
+        if($modulestatus->postscreated == 1){
+            echo "<td class='debate-manage-table-running'>Posts criados com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar posts.</td>";
+            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo '</table>';
+}
+else{
+    echo "Oops. Alguma coisa aconteceu de errado. <b>Não existem status a serem exibidos</b>. <br>";
+    echo "Os status são importantes para o correto funcionamento da aplicação. Se você não estiver vendo, clique em <i>Gerar status da aplicação</i>. <br>";
+    echo "<td><a href='$createstatus'><button>Gerar status da aplicação</button></a></td>";
+}
+
+
+// ------------------------------------------------------------------
+//echo "<h4 class='debate-menage-header-style'>Estatística do curso</h4>";
+// fazer em formato de tabela. Seguir padrão.
+# total de alunos
+# total de grupos
+# total de grupos a favor
+# total de grupos contra
+# total de posts (defesa)
+# ------------------------
+# total de posts (refutação)
+
+
+//echo "<a href='$CFG->wwwroot/course/view.php?id=$courseid'><button>".get_string('back')."</button></a>";
 echo $OUTPUT->footer();

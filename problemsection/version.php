@@ -36,6 +36,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'local_problemsection';
 $plugin->release    = '1.2';
-$plugin->version    = 2017021330;
+$plugin->version    = 2017021332; // 32 atualizações
 $plugin->requires   = 2014022000;
 $plugin->maturity   = MATURITY_STABLE;

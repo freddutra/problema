@@ -13,18 +13,17 @@ class groupaction_form extends moodleform {
         $mform->addElement('header', 'generalhdr', get_string('general'));
 
         // Título
-        $mform->addElement('text', 'name', get_string('name'));
+        $mform->addElement('text', 'name', get_string('actionname', 'local_problemsection'));
         $mform->addRule('name', get_string('maximumchars', '', 99), 'maxlength', 99);
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
 
         // Data de execução
-        $mform->addElement('date_time_selector', 'datefrom', get_string('allowsubmissionsfromdate', 'assign'));
-        $mform->addHelpButton('datefrom', 'directions', 'local_problemsection');
+        $mform->addElement('date_time_selector', 'datefrom', get_string('datetoexecute', 'local_problemsection'));
         $mform->addRule('datefrom', get_string('required'), 'required', null, 'client');
 
         //Tipo
-        $mform->addElement('header', 'communicationhdr', get_string('communicationtools', 'local_problemsection'));
+        $mform->addElement('header', 'communicationhdr', get_string('selectactiontype', 'local_problemsection'));
         
         $FORUM_TYPES = array(
             "opengroup"=>"Abrir Grupos (Visível)",
@@ -32,7 +31,7 @@ class groupaction_form extends moodleform {
             "creategroups"=>"Criar Grupos"
         );
 
-        $mform->addElement('select', 'type', get_string('forumtype', 'forum'), $FORUM_TYPES, "yes");
+        $mform->addElement('select', 'type', get_string('actiontype', 'local_problemsection'), $FORUM_TYPES, "yes");
 
 
         $mform->addElement('hidden', 'courseid', $this->_customdata['courseid']);

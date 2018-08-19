@@ -1,0 +1,81 @@
+/*
+    $avaliablestudent = array();
+    $context = context_course::instance($courseid);
+    $students = $DB->get_records("user_enrolments", array('enrolid'=>$courseid));
+    foreach($students as $student){
+        $isstudent = $DB->count_records("role_assignments", array('contextid'=>$courseid));
+        $coursecontext = context_module::instance($course->id);
+        if (!has_capability('mod/folder:managefiles', $coursecontext, $student->userid, false)) {
+            $avaliablestudent[] = array('userid'=>$student->userid);
+        }
+    }
+    
+    $selectusersgroups = array();
+    $startgroups = $DB->get_records("groups", array('courseid'=>$courseid));
+    foreach($startgroups as $startgroup){
+        if(preg_match('/\[DC]\b/', $startgroup->name)){
+            $returnuserofgroups = $DB->get_records("groups_members", array('groupid'=>$startgroup->id));
+            $data = array();
+            foreach($returnuserofgroups as $returnuserofgroup){
+                $data[$returnuserofgroup->userid] = array('userid'=>$returnuserofgroup->userid, 'groupid'=>$startgroup->id, 'groupname'=>groups_get_group_name($startgroup->id));
+            }
+            $selectusersgroups[$startgroup->id] = $data;
+        }
+    }
+    
+    $grouplim = 1; // Limite de alunos / grupo
+    $hardsplit = 2; // 50%
+    $timestamp = time(); // now
+    $freshcreatedgroupsid = array(); // group ids
+    
+    if(count($avaliablestudent) > $grouplim) {
+        $groupnameformat = "Grupo @";
+        $newgroupscount = count($avaliablestudent)/$grouplim;
+        if(is_int($newgroupscount) == true){
+            for($i = 0; $newgroupscount > $i; $i++){
+                $currentgroupname = str_replace('@', $i+1, $groupnameformat); // string de formatação
+                //$randomsecret = rand(); // prefixo. evitar colisão de identificadores
+                //$ident = $randomsecret.""; // identificador
+                
+                $groupprefix = "_dc";
+                $groupmagicnumber = 0;
+                
+                if($i % 2 == 0){$currentgroupname = $currentgroupname . " (argumento positivo)"; $groupmagicnumber = 2;} //$ident = "dcp_"; // (argumento positivo)
+                else{$currentgroupname = $currentgroupname . " (argumento negativo)"; $groupmagicnumber = 1;} // $ident = "dcn_"; // (argumento negativo)
+                    
+                $stringconcat = $groupprefix.'&'.$groupmagicnumber$';
+                $groupuniqueid = uniqid($stringconcat, true);
+                
+                $data = new stdClass();
+                $data->courseid = $courseid;
+                $data->name = $currentgroupname;
+                $data->idnumber = $groupuniqueid;
+                $freshcreatedgroupsid[] = groups_create_group($data);
+            }
+        }
+        else{
+            echo "Not an integer.";
+        }        
+    }
+
+    // alocar alunos em posição oposta
+    // A -> B | A <- B
+    
+    foreach($selectusersgroups as $setnewgroupstudents){
+        foreach($setnewgroupstudents as $setnewgroupstudent){
+            if(preg_match('/(\[DC]\b)(\w+)[1]\b/', $setnewgroupstudent['groupname'])){ // Se 1 == a favor/contra
+                foreach($freshcreatedgroupsid as $freshcreatedgroupid){
+                    $numberusersingroup = $DB->count_records('groups_members', array("groupid"=>$freshcreatedgroupid));
+                    if($numberusersingroup < $grouplim){
+                        // Add
+                        $group = groups_get_group($freshcreatedgroupid, 'id, courseid', MUST_EXIST);
+                        $user = $DB->get_record('user', array('id'=>$setnewgroupstudent['userid']));
+                        groups_add_member($group, $user);
+                        break;
+                    }
+                }
+            }
+            else {} // do something
+        }
+    }
+    */

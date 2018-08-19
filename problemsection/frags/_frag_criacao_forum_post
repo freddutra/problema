@@ -1,0 +1,61 @@
+
+    // -----------------------------------------------------------------------------------
+    // Criação do forum e apresentação
+
+    $forum = new stdClass();
+    $forum->course = $courseid;
+    $forum->type = "blog";    
+    $forum->name = "Teste via php"; // nome
+    $forum->intro = ""; // introdução
+    $forum->timemodified = time();
+    $forum->id = $DB->insert_record("forum", $forum);
+    
+    $mod = new stdClass();
+    $mod->course = $courseid;
+    $mod->module = 9; // forçar forum
+    $mod->instance = $forum->id;
+    $mod->section = 0;
+    $mod->added = time();
+    $mod->id = add_course_module($mod);
+
+    // 11 arbitrário. Deixar adm escolher o evento que deseja inserir o forum
+    $sectionid = course_add_cm_to_section($courseid, $mod->id, 11);
+    
+    $DB->set_field("course_modules", "section", $sectionid, array("id" => $mod->id));
+    rebuild_course_cache($courseid);
+    
+    // -----------------------------------------------------------------------------------
+    
+    // apos divisão dos grupos menores. PRECISA DO NUMID
+    $getgroupsnewtopic = $DB->get_records('groups', array('courseid'=>$courseid));
+    $countgrouprecords = 1;
+    foreach($getgroupsnewtopic as $getgroupnewtopic)
+    {
+        $topictitleformat = array();
+            $topictitleformat[1] = "(A favor)";
+            $topictitleformat[2] = "(Contra)";
+        
+        $getfirstsectionidnumber = explode('$', $getgroupnewtopic->idnumber);
+        $getmagicalnumber = explode('&', $getfirstsectionidnumber[0]);
+
+        if((count($getmagicalnumber) == 2)){
+            //echo $getgroupnewtopic->id;
+            //echo "Nome do grupo: " . "Grupo " . $countgrouprecords . ' ' .  $topictitleformat[$getmagicalnumber[1]] . "<br>";
+            
+            $newtopicname = "Grupo " . $countgrouprecords . ' ' .  $topictitleformat[$getmagicalnumber[1]];
+            
+            $discussion = new stdClass();
+            $discussion->course        = $courseid;
+            $discussion->forum         = $forum->id;
+            $discussion->name          = $newtopicname;
+            $discussion->message       = $forum->intro;
+            $discussion->messageformat = 1;
+            $discussion->messagetrust  = trusttext_trusted(context_course::instance($courseid));
+            $discussion->groupid       = $getgroupnewtopic->id;
+            $discussion->mailnow       = false;
+            $message = '';
+            $discussion->id = forum_add_discussion($discussion, null, $message);
+        }
+        
+        $countgrouprecords++;
+    }
