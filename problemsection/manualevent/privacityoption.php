@@ -39,27 +39,29 @@
 
 global $CFG, $PAGE, $USER, $SITE, $COURSE;
 
-require_once('../../config.php');
-require_once('lib.php');
-require_once('selector.php');
-require_once('blind/quizselect_form.php');
+//require_once("../../config.php");
+require_once dirname(dirname(dirname(__FILE__))).'/../config.php';
+require_once('../lib.php');
+require_once('../blind/forumactions_lib.php');
 require_once($CFG->libdir.'/formslib.php');
 
-// Access control.
 $courseid = required_param('id', PARAM_INT);
+$courseaction = required_param('action', PARAM_INT);
+
+// Access control.
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 require_login($course);
 $context = context_course::instance($courseid);
 require_capability('moodle/course:update', $context);
 require_capability('local/problemsection:addinstance', $context);
 
-$courseid = required_param('id', PARAM_INT);
 $paramgroupid = optional_param('groupid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 $changedgroupid = optional_param('changed', 0, PARAM_INT);
 
 //$pageurl = new moodle_url('/local/problemsection/debateadm.php', array('id' => $courseid));
 $course = $DB->get_record('course', array('id' => $courseid));
+$PAGE->set_pagelayout('admin');
 
 require_login($course);
 $context = context_course::instance($course->id);
@@ -67,30 +69,23 @@ require_capability('moodle/course:managegroups', $context);
 require_capability('local/problemsection:addinstance', $context);
 
 // Header code.
-$pageurl = new moodle_url('/local/problemsection/quizselect.php', array('id' => $courseid));
+//$pageurl = new moodle_url('/local/problemsection/problemsection.php', array('id' => $courseid));
+$pageurl = new moodle_url('/local/problemsection/manualevents/privacyoption.php', array('id' => $courseid));
 $PAGE->set_url($pageurl);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_course($course);
 
-$pagetitle = "Gerenciador de ações";
+$pagetitle = "Configuração de privacidade";
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($pagetitle);
 
-$mform = new groupaction_form($pageurl);
 $courseurl = new moodle_url('/course/view.php', array('id' => $courseid));
-if ($mform->is_cancelled()) {
-    redirect($courseurl);
-} else if ($submitteddata = $mform->get_data()) {
-    try{
-        $getmodulestatusid = $DB->get_record('local_problemsection_status', array('courseid'=>$courseid));
-        $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'presentationcreated'=>1));
-        header("Location: blind/transformquiztogroup.php?id=$courseid&quizid=$submitteddata->selectedchoise");
-    }
-    catch(\Exception $e) {
-        echo("Fail" . $e->getMessage());
-    }
-} else {
-    echo $OUTPUT->header();
-    $mform->display();
-    echo $OUTPUT->footer();
+try{
+    if($courseaction == 1){open_forum($courseid); echo "abriu";}
+    else{close_forum($courseid); echo "fechou";}
+
+    header("Location: ../manage.php?id=$courseid&psid=");
+}
+catch(\Exception $e) {
+    echo("Fail" . $e->getMessage());
 }

@@ -109,7 +109,7 @@ try{
     rebuild_course_cache($courseid);
 
     $getmodulestatusid = $DB->get_record('local_problemsection_status', array('courseid'=>$courseid));
-    $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'presentationcreated'=>1));
+    $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'quizcreated'=>1));
 
     header("Location: ../manage.php?id=$courseid&psid=");
 }

@@ -189,6 +189,8 @@ if ($problemsections) {
 // -------------------------
 $problemsectionsactions = $DB->get_records('local_problemsection_groups', array('courseid' => $courseid));
 echo "<h4 class='debate-menage-header-style'>Funções</h4>";
+echo "<h5 style='color:#CC1F1A; border:2px solid #CC1F1A; margin: 5px; margin-left: 0; margin-right: 0; padding: 5px'>AVISO: PARA QUE O CORRETO FUNCIONAMENTO, É NECESSÁRIO QUE A FUNÇÃO <i>CRON</i> ESTEJA CONFIGURADA E RODANDO. CASO CONTRÁRIO, EXECUTE AS FUNÇÕES MANUALMENTE.</h5>";
+
 if ($problemsectionsactions) {
     echo '<table class="debate-menage-table">';
     echo '<tr>';
@@ -217,7 +219,173 @@ if ($problemsectionsactions) {
 }
 
 // ------------------------------------------------------------------
-echo "<h4 class='debate-menage-header-style'>Configuração do módulo</h4>";
+$modulestatus = $DB->get_record('local_problemsection_status', array("courseid"=>$courseid));
+echo "<h4 class='debate-menage-header-style'>Status do sistema</h4>";
+
+$createstatus = "blind/createstatus.php?id=$courseid";
+$createpresentation = "createpresentation.php?id=$courseid";
+$createquiz = "blind/createquiz.php?id=$courseid";
+$convertquiztogroup = "quizselect.php?id=$courseid";
+$createdebate = "selectsectiondebate.php?id=$courseid";
+
+echo "<h5 style='color:#CC1F1A; border:2px solid #CC1F1A; margin: 5px; margin-left: 0; margin-right: 0; padding: 5px'>AVISO: UMA VEZ CONFIGURADO, NÃO HÁ COMO SE CONFIGURAR NOVAMENTE. APENAS PODE HAVER UMA CONFIGURAÇÃO DE MÓDULO POR CURSO.</h5>";
+if (
+    ($modulestatus->presentationcreated == 1) &&
+    ($modulestatus->quizcreated == 1) &&
+    ($modulestatus->initialgroupcreated == 1)
+){
+    echo "<h5 style='color:#1F9D55; border:2px solid #1F9D55; margin: 5px; margin-left: 0; margin-right: 0; padding: 5px'>SISTEMA CONFIGURADO E PRONTO PARA USO</h5>";
+}
+
+if($modulestatus){
+    echo '<table class="debate-menage-table">';
+    echo '<colgroup>
+       <col span="1" style="width: 5%;">
+       <col span="1" style="width: 45%;">
+       <col span="1" style="width: 20%;">
+       <col span="1" style="width: 20%;">
+    </colgroup>';
+    echo '<tr>';
+    echo "<th> Passo </th>";
+    echo '<th> Descrição </th>';
+    echo '<th> Status </th>';
+    echo '<th> Ação </th>';
+    echo '</tr>';
+
+    echo "<tr>";
+        echo "<td>1</td>";
+        echo "<td>Criar/editar carta de apresentação do debate.</td>";
+        if($modulestatus->presentationcreated == 1){
+            echo "<td class='debate-manage-table-running'>Já configurada.</td>";
+            echo "<td><a href='$createpresentation'><button>Nova Carta de apresentação</button></a></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
+            echo "<td><a href='$createpresentation'><button>Criar Carta de apresentação</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>2</td>";
+        echo "<td>Criar quiz inicial.</td>";
+        if($modulestatus->quizcreated == 1){
+            echo "<td class='debate-manage-table-running'>Quiz já configurado.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
+            echo "<td><a href='$createquiz'><button>Criar quiz de seleção</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>3</td>";
+        echo "<td>Gerar grupos iniciais a partir do quiz criado.";
+        if($modulestatus->quizcreated == 0) {echo "<br><b>Não é possível criar os grupos iniciais: Quiz não inicializado.</b>";}
+        echo "</td>";
+        if($modulestatus->initialgroupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+            echo "<td><a href='$convertquiztogroup'><button>Gerar grupos</button></a></td>";
+            //echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
+            if($modulestatus->quizcreated == 1) { echo "<td><a href='$convertquiztogroup'><button>Gerar grupos</button></a></td>";}
+            else{echo "<td></td>";}
+            echo "<td><a href='$convertquiztogroup'><button>Gerar grupos</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>4</td>";
+        echo "<td>Gerar grupos para debate.";
+        echo "<br><b>AVISO: Nessa opção serão criados os grupos para debate, fórum e tópicos para os alunos.</b>";
+        if(($modulestatus->quizcreated == 0) || ($modulestatus->initialgroupcreated == 0)) {echo "<br><b>Não é possível criar grupo para debate: Quiz não inicializado OU grupo inicial não configurado.</b>";}
+        echo "</td>";
+        if($modulestatus->groupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
+            if($modulestatus->quizcreated == 1) { echo "<td><a href='$createdebate'><button>Gerar grupos</button></a></td>";}
+            else{echo "<td></td>";}
+        }
+    echo "</tr>";
+
+    // estatísticas gerais
+    echo "<tr>";
+        echo "<td></td>";
+        echo "<td>Grupos de debate</td>";
+        if($modulestatus->groupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar os grupos.</td>";
+            echo "<td></td>";
+        }
+    echo "</tr>";
+    echo "<tr>";
+        echo "<td></td>";
+        echo "<td>Criação de fórum para debate</td>";
+        if($modulestatus->groupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Fórum criado com sucesso.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar fórum.</td>";
+            echo "<td></td>";
+        }
+    echo "</tr>";
+    echo "<tr>";
+        echo "<td></td>";
+        echo "<td>Criação tópicos debate</td>";
+        if($modulestatus->groupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Tópicos criados com sucesso.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar os Tópicos.</td>";
+            echo "<td></td>";
+        }
+    echo "</tr>";
+    echo "<tr>";
+        echo "<td></td>";
+        echo "<td>Criação de fórum para debate</td>";
+        if($modulestatus->groupcreated == 1){
+            echo "<td class='debate-manage-table-running'>Fórum criado com sucesso.</td>";
+            echo "<td></td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar fórum.</td>";
+            echo "<td></td>";
+        }
+    echo "</tr>";
+    echo "<tr>";
+        echo "<td></td>";
+        echo "<td>Privacidade do curso, forum e tópicos</td>";
+        
+        $coursestatus = $DB->get_record('course', array('id'=>$courseid));
+
+        //echo "<td>$coursestatus->groupmode</td>";
+        if($coursestatus->groupmode == 1){
+            echo "<td class='debate-manage-table-not-running'>Grupos invisíveis.</td>";
+            echo "<td></td>";
+        }
+        elseif($coursestatus->groupmode == 2){
+            echo "<td class='debate-manage-table-running'>Grupos visíveis.</td>";
+            echo "<td></td>";
+        }
+        elseif($coursestatus->groupmode == 0){
+            echo "<td class='debate-manage-table-not-running'>Sem restrição de grupos.</td>";
+            echo "<td></td>";
+        }
+    echo "</tr>";
+    
+
+    echo '</table>';
+}
+else{
+    echo "Oops. Alguma coisa aconteceu de errado. <b>Não existem status a serem exibidos</b>. <br>";
+    echo "Os status são importantes para o correto funcionamento da aplicação. Se você não estiver vendo, clique em <i>Gerar status da aplicação</i>. <br>";
+    echo "<td><a href='$createstatus'><button>Gerar status da aplicação</button></a></td>";
+}
+
+// ------------------------------------------------------------------
+echo "<h4 class='debate-menage-header-style'>Configuração do ambiente</h4>";
 $moduleconfigadm = $DB->get_record('local_problemsection_config', array('courseid' => $courseid));
 if ($moduleconfigadm) {
     echo '<table class="debate-menage-table">';
@@ -240,99 +408,32 @@ if ($moduleconfigadm) {
 } else {
     echo '<p>'.get_string('noproblemyet', 'local_problemsection').'</p>';
 }
+echo "<div style='color:#2779BD; border:2px solid #2779BD; margin: 5px; margin-left: 0; margin-right: 0; padding: 5px'>Para alterar de 'Formato do nome do grupo', 'Formato do nome do subgrupo', 'Formato nome do tópico de discussão' e 'Formato nome do tópico de refutação', altere os seguintes arquivos: <br> <i> xx </i></div>";
 
 // ------------------------------------------------------------------
-$modulestatus = $DB->get_record('local_problemsection_status', array("courseid"=>$courseid));
-echo "<h4 class='debate-menage-header-style'>Estatística do sistema</h4>";
+// execuções manuais de rotina
+$manualcreateforum = "runcustomdebate.php?id=$courseid&action=1";
+$manuallockprivacy = "manualevent/privacityoption.php?id=$courseid&action=1";
+$manualopenprivacy = "manualevent/privacityoption.php?id=$courseid&action=2";
+$manualcreatesubgroup = "manualevent/createsubgroups.php?id=$courseid";
+$manualcreatetopics = "runcustomdebate.php?id=$courseid&action=2";
 
-$createstatus = "blind/createstatus.php?id=$courseid";
-$createpresentation = "createpresentation.php?id=$courseid";
-$createquiz = "quizselect.php?id=$courseid";
-$createdebate = "selectsectiondebate.php?id=$courseid";
+echo "<h4 class='debate-menage-header-style'>Execução e manutenção manual de sistema</h4>";
+echo "<h5 style='color:#DE751F; border:2px solid #DE751F; margin: 5px; margin-left: 0; margin-right: 0; padding: 5px'>AVISO: APENAS UTILIZE ESTA FUNÇÃO SE O <i> CRON </i> NÃO ESTIVER DISPONÍVEL. A EXECUÇÃ SE DARÁ IMEDIATAMENTE APÓS O CLICK.</h5>";
 
-if($modulestatus){
-    echo '<table class="debate-menage-table">';
-    echo '<tr>';
-    echo '<th> Descrição </th>';
-    echo '<th> Status </th>';
-    echo '<th> Ação </th>';
-    echo '</tr>';
+echo '<table class="debate-menage-table">';
+echo '<tr>';
+echo '<th> Descrição </th>';
+echo '<th> Ação </th>';
+echo '</tr>';
 
-    echo "<tr>";
-        echo "<td>Criar/editar carta de apresentação do debate.</td>";
-        if($modulestatus->presentationcreated == 1){
-            echo "<td class='debate-manage-table-running'>Já configurada.</td>";
-            echo "<td><a href='$createpresentation'><button>Nova Carta de apresentação</button></a></td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
-            echo "<td><a href='$createpresentation'><button>Criar Carta de apresentação</button></a></td>";
-        }
-    echo "</tr>";
+echo "<tr><td>Criar fórum em seção do curso</td><td><a href='$manualcreateforum'><button>Criar fórum</button></a></td></tr>";
+echo "<tr><td>Tornar curso, forum e tópicos visíveis</td><td><a href='$manualopenprivacy'><button>Abrir fórum</button></a></td></tr>";
+echo "<tr><td>Tornar curso, forum e tópicos invisíveis</td><td><a href='$manuallockprivacy'><button>Fechar fórum</button></a></td></tr>";
+echo "<tr><td>Criar grupo de debate a partir do quiz preenchido pelo aluno</td><td><a href='$manualcreatesubgroup'><button>Criar grupo (debate)</button></a></td></tr>";
+echo "<tr><td>Criar fórum em seção do curso</td><td><a href='$manualcreatetopics'><button>Criar tópico (debate)</button></a></td></tr>";
+echo '</table>';
 
-    echo "<tr>";
-        echo "<td>Criar quiz inicial.</td>";
-        if($modulestatus->quizcreated == 1){
-            echo "<td class='debate-manage-table-running'>Quiz já configurado.</td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Não configurada.</td>";
-            echo "<td><a href='$createquiz'><button>Criar quiz de seleção</button></a></td>";
-        }
-    echo "</tr>";
-
-    echo "<tr>";
-        echo "<td>Gerar grupos iniciais a partir do quiz criado.";
-        if($modulestatus->quizcreated == 0) {echo "<br><b>Não é possível criar os grupos iniciais: Quiz não inicializado.</b>";}
-        echo "</td>";
-        if($modulestatus->initialgroupcreated == 1){
-            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
-            echo "<td><a href=''><button>Gerar grupos</button></a></td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
-            if($modulestatus->quizcreated == 1) { echo "<td><a href=''><button>Gerar grupos</button></a></td>";}
-            else{echo "<td><a href=''><button>Gerar grupos</button></a></td>";}
-        }
-    echo "</tr>";
-
-    echo "<tr>";
-        echo "<td>Gerar grupos secundários a partir do primeiro (divisão para debate).</td>";
-        if($modulestatus->groupscreated == 1){
-            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
-            echo "<td><a href='$createdebate'><button>Gerar grupos</button></a></td>";
-        }
-    echo "</tr>";
-
-    echo "<tr>";
-        echo "<td>Fórum de debate (defesa e refutação).</td>";
-        if($modulestatus->forumcreated == 1){
-            echo "<td class='debate-manage-table-running'>Fórum criado com sucesso.</td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Falha ao criar fórum.</td>";
-            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
-        }
-    echo "</tr>";
-
-    echo "<tr>";
-        echo "<td>Posts de debate (defesa).</td>";
-        if($modulestatus->postscreated == 1){
-            echo "<td class='debate-manage-table-running'>Posts criados com sucesso.</td>";
-        }else{
-            echo "<td class='debate-manage-table-not-running'>Falha ao criar posts.</td>";
-            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
-        }
-    echo "</tr>";
-
-    echo '</table>';
-}
-else{
-    echo "Oops. Alguma coisa aconteceu de errado. <b>Não existem status a serem exibidos</b>. <br>";
-    echo "Os status são importantes para o correto funcionamento da aplicação. Se você não estiver vendo, clique em <i>Gerar status da aplicação</i>. <br>";
-    echo "<td><a href='$createstatus'><button>Gerar status da aplicação</button></a></td>";
-}
-
-
-// ------------------------------------------------------------------
 //echo "<h4 class='debate-menage-header-style'>Estatística do curso</h4>";
 // fazer em formato de tabela. Seguir padrão.
 # total de alunos

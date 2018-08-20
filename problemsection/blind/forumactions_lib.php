@@ -28,14 +28,36 @@
  * @copyright 2016 Brice Errandonea <brice.errandonea@u-cergy.fr>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * File : version.php
- * Version number
+ * File : lib.php
+ * Library functions
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once("$CFG->dirroot/course/lib.php");
+require_once($CFG->dirroot.'/group/lib.php');
 
-$plugin->component  = 'local_problemsection';
-$plugin->release    = '1.2';
-$plugin->version    = 2017021334; // 34 atualizações
-$plugin->requires   = 2014022000;
-$plugin->maturity   = MATURITY_STABLE;
+function open_forum($courseid){
+    /* 
+     * Forçar curso a ser público (grupos visiveis).
+     * Fórum acompanha a privacidade do curso
+     */ 
+    global $COURSE, $DB;
+    $DB->update_record("course", array(
+        'id'=>$courseid,
+        'groupmode'=>1,
+        'groupmodeforce'=>1
+    ));
+}
+
+function close_forum($courseid){
+    /* 
+     * Forçar curso a ser privado (grupos visiveis).
+     * Fórum acompanha a privacidade do curso
+     */ 
+    global $COURSE, $DB;
+    $DB->update_record("course", array(
+        'id'=>$courseid,
+        'groupmode'=>2,
+        'groupmodeforce'=>1
+    ));
+}

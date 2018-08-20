@@ -1,0 +1,31 @@
+echo "<tr>";
+        echo "<td>Gerar grupos secundários a partir do primeiro (divisão para debate).</td>";
+        if($modulestatus->groupscreated == 1){
+            echo "<td class='debate-manage-table-running'>Grupos criados com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Grupos não criados.</td>";
+            echo "<td><a href='$createdebate'><button>Gerar grupos</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>1</td>";
+        echo "<td>Fórum de debate (defesa e refutação).</td>";
+        if($modulestatus->forumcreated == 1){
+            echo "<td class='debate-manage-table-running'>Fórum criado com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar fórum.</td>";
+            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
+        }
+    echo "</tr>";
+
+    echo "<tr>";
+        echo "<td>1</td>";
+        echo "<td>Posts de debate (defesa).</td>";
+        if($modulestatus->postscreated == 1){
+            echo "<td class='debate-manage-table-running'>Posts criados com sucesso.</td>";
+        }else{
+            echo "<td class='debate-manage-table-not-running'>Falha ao criar posts.</td>";
+            echo "<td><a href=''><button>Criar manualmente</button></a></td>";
+        }
+    echo "</tr>";

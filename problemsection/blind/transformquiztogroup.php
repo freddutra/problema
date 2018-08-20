@@ -78,8 +78,9 @@ $PAGE->set_heading($pagetitle);
 $courseurl = new moodle_url('/course/view.php', array('id' => $courseid));
 try{
     $returnchoicestudents = $DB->get_records('choice_answers', array('choiceid'=>$quizid));
-
     //echo "<pre>";
+    //echo "V. 6.7 <br>";
+
     foreach($returnchoicestudents as $returnchoicestudent){
         
         $getgroups = $DB->get_records("groups", array('courseid'=>$courseid));
@@ -88,41 +89,52 @@ try{
         $data = new stdClass();
         $data->courseid = $courseid;
 
+        //print_r($getgroups);
+        //echo "getgroups:: " . count($getgroups);
+        //echo " optionid:: " . $returnchoicestudent->optionid . " | ";
+
+        $locateandcreatefirst = $DB->record_exists("groups", array('courseid'=>$courseid, 'name'=>"[DI]DebateCritico1"));
+        $locateandcreatesecond = $DB->record_exists("groups", array('courseid'=>$courseid, 'name'=>"[DI]DebateCritico2"));
+        
         if($returnchoicestudent->optionid == 1){
-            if(count($getgroups) != 0){
-                foreach($getgroups as $getgroup){
-                    if(preg_match('/(\[DI]\b)(\w+)[1]\b/', $getgroup->name)){
-                        $group = groups_get_group($getgroup->id, 'id, courseid', MUST_EXIST);
-                        groups_add_member($group, $user);
-                        break;
-                    }
-                }
+            //echo "Primeiro grupo :: ";
+            if($locateandcreatefirst == 1){
+                $groupid = $DB->get_record("groups", array('courseid'=>$courseid, 'name'=>"[DI]DebateCritico1"));
+                $group = groups_get_group($groupid->id, 'id, courseid', MUST_EXIST);
+                groups_add_member($group, $user);
+                //echo ">> inseriu no grupo 1 <br>";
             }
-            else{ $data->name = "[DI]DebateCritico1"; }
+            else{
+                $data->name = "[DI]DebateCritico1"; 
+                $creanewgroup = groups_create_group($data);
+                $group = groups_get_group($creanewgroup, 'id, courseid', MUST_EXIST);
+                groups_add_member($group, $user);
+                //echo "Criou o grupo 1 <br> ";
+            }
+            //echo "<br>";
         }
         else{
-            if(count($getgroups) != 0){
-                foreach($getgroups as $getgroup){
-                    if(preg_match('/(\[DI]\b)(\w+)[2]\b/', $getgroup->name)){
-                        $group = groups_get_group($getgroup->id, 'id, courseid', MUST_EXIST);
-                        groups_add_member($group, $user);
-                        break;
-                    }
-                }
+            //echo "Segundo grupo :: ";
+            if($locateandcreatesecond == 1){
+                $groupid = $DB->get_record("groups", array('courseid'=>$courseid, 'name'=>"[DI]DebateCritico2"));
+                $group = groups_get_group($groupid->id, 'id, courseid', MUST_EXIST);
+                groups_add_member($group, $user);
+                //echo ">> inseriu no grupo 2 <br>";
             }
-            else{ $data->name = "[DI]DebateCritico2"; }
+            else{
+                $data->name = "[DI]DebateCritico2"; 
+                $creanewgroup = groups_create_group($data);
+                $group = groups_get_group($creanewgroup, 'id, courseid', MUST_EXIST);
+                groups_add_member($group, $user);
+                //echo "Criou o grupo 2 <br> ";
+            }
         }
 
-        $creanewgroup = groups_create_group($data);
-        $group = groups_get_group($creanewgroup, 'id, courseid', MUST_EXIST);
         $user = $DB->get_record('user', array('id'=>$returnchoicestudent->userid, 'deleted'=>0, 'mnethostid'=>$CFG->mnet_localhost_id), '*', MUST_EXIST);
-        groups_add_member($group, $user);
-        
         $getmodulestatusid = $DB->get_record('local_problemsection_status', array('courseid'=>$courseid));
         $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'initialgroupcreated'=>1));
-
-        header("Location: ../manage.php?id=$courseid&psid=");
     }
+    header("Location: ../manage.php?id=$courseid&psid=");
 }
 catch(\Exception $e) {
     echo("Fail" . $e->getMessage());

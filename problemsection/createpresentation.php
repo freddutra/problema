@@ -85,7 +85,7 @@ if ($mform->is_cancelled()) {
     try{
         $data = new stdClass();
         $data->course = $courseid;
-        $data->name = "Carta de apresentação 2";
+        $data->name = "Carta de apresentação";
         $data->intro = $submitteddata->frontpagedescription['text'];
         $data->introformat = 1;
         $data->content = $submitteddata->pagecontent['text'];

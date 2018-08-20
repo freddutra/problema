@@ -67,17 +67,24 @@ function create_debate_groups($courseid)
 {
     global $COURSE, $DB;
 
+    $courseidhack = $courseid + 1;
+
     // IMPORTANT
-    $grouplim = 1; // Limite de alunos / grupo
+    // load from DB
+    $grouplim = 2; // Limite de alunos / grupo
     $hardsplit = 2; // 50%
 
     $avaliablestudent = array();
     $context = context_course::instance($courseid);
-    $students = $DB->get_records("user_enrolments", array('enrolid'=>$courseid));
+    $students = $DB->get_records("user_enrolments", array('enrolid'=>$courseidhack));
+
+    //print_r($context);
+    //print_r($students);
 
     foreach($students as $student){
-        $isstudent = $DB->count_records("role_assignments", array('contextid'=>$courseid));
-        $coursecontext = context_module::instance($courseid);
+        $isstudent = $DB->count_records("role_assignments", array('contextid'=>$context->id));
+        //print_r($isstudent);
+        $coursecontext = context_module::instance($courseidhack);
         if (!has_capability('mod/folder:managefiles', $coursecontext, $student->userid, false)) {
             $avaliablestudent[] = array('userid'=>$student->userid);
         }
@@ -89,6 +96,7 @@ function create_debate_groups($courseid)
         (count($avaliablestudent) < $grouplim) &&
         (is_int($newgroupscount) == true)
     ){ echo "Falha. Numero de alunos menor que o limite por grupo."; exit(); }
+    else {echo "working?";}
     
     // Get initial groups
     $selectusersgroups = array();
@@ -109,7 +117,7 @@ function create_debate_groups($courseid)
     // Split subgroups
     $timestamp = time(); // now
     $freshcreatedgroupsid = array(); // group ids
-    
+
     if(count($avaliablestudent) >= $grouplim) {
         
         $groupnameformat = "Grupo @";
@@ -138,37 +146,29 @@ function create_debate_groups($courseid)
         }
     }
 
-    // Invert position
-    foreach($selectusersgroups as $setnewgroupstudents){
-        foreach($setnewgroupstudents as $setnewgroupstudent){
-            //print_r($setnewgroupstudent); 
-            if(preg_match('/(\[DI]\b)(\w+)[1]\b/', $setnewgroupstudent['groupname'])){ // Se 1 == a favor/contra
-                foreach($freshcreatedgroupsid as $freshcreatedgroupid){
-                    //print_r($freshcreatedgroupid);
-                    $numberusersingroup = $DB->count_records('groups_members', array("groupid"=>$setnewgroupstudent["groupid"]));
-                    if($numberusersingroup <= $grouplim){
-                        $group = groups_get_group($freshcreatedgroupid, 'id, courseid', MUST_EXIST);
-                        $user = $DB->get_record('user', array('id'=>$setnewgroupstudent['userid']));
-                        groups_add_member($group, $user);
-                        break;
-                    }
+    // Insert students in groups
+    foreach($freshcreatedgroupsid as $newgropid){
+        $returngrouprecord = $DB->get_record('groups', array('id'=>$newgropid->id));
+        
+        $getfirstsectionidnumber = explode(']', $newgropid->idnumber);
+        $getmagicalnumber = explode('[', $getfirstsectionidnumber[0]);
+        
+        $numberusersingroup = $DB->count_records('groups_members', array("groupid"=>$newgropid->id));
+        //if($numberusersingroup == 0){$numberusersingroup = $numberusersingroup + 1;}
+
+        foreach($selectusersgroups as $possiblestudents){
+            foreach($possiblestudents as $avaliablestudent){
+                if($numberusersingroup < $grouplim){
+                    $group = groups_get_group($newgropid, 'id, courseid', MUST_EXIST);
+                    $user = $DB->get_record('user', array('id'=>$avaliablestudent["userid"]));
+                    groups_add_member($group, $user);
+                    $numberusersingroup++;
                 }
             }
-            elseif (preg_match('/(\[DI]\b)(\w+)[2]\b/', $setnewgroupstudent['groupname'])) {
-                foreach($freshcreatedgroupsid as $freshcreatedgroupid){
-                    //print_r($freshcreatedgroupid);
-                    $numberusersingroup = $DB->count_records('groups_members', array("groupid"=>$setnewgroupstudent["groupid"]));
-                    if($numberusersingroup <= $grouplim){
-                        $group = groups_get_group($freshcreatedgroupid, 'id, courseid', MUST_EXIST);
-                        $user = $DB->get_record('user', array('id'=>$setnewgroupstudent['userid']));
-                        groups_add_member($group, $user);
-                        break;
-                    }
-                }
-            }
-            else{ /*do nothing*/ }
         }
     }
+
+    echo "<br> Worked? 0 errors. ";
 }
 
 function create_debate_topics($courseid, $forum){
@@ -200,7 +200,6 @@ function create_debate_topics($courseid, $forum){
             $discussion->mailnow       = false;
             $message = '';
             $discussion->id = forum_add_discussion($discussion, null, $message);
-            print_r($discussion);
         }
         
         $countgrouprecords++;
