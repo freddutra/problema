@@ -82,7 +82,7 @@ $PAGE->set_heading($pagetitle);
 
 $courseurl = new moodle_url('/course/view.php', array('id' => $courseid));
 try{
-    echo "<pre>";
+    //echo "<pre>";
     
     // First step: create forum
     $forum = create_forum($courseid, $sectionid); //OK
@@ -93,7 +93,8 @@ try{
     // Third step: create topics (with privacy)
     create_debate_topics($courseid, $forum); // OK
 
-    echo "</pre>";
+    //echo "</pre>";
+    header("Location: ../manage.php?id=$courseid&psid=");
 }
 catch(\Exception $e) {
     echo("Fail" . $e->getMessage());
