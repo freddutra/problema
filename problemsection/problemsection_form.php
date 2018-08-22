@@ -39,9 +39,13 @@ require_once($CFG->libdir.'/formslib.php');
 
 class problemsection_form extends moodleform {
     public function definition() {
-        global $OUTPUT;
+        global $OUTPUT, $DB;
 
         $mform =& $this->_form;
+
+        if($DB->record_exists('local_problemsection_status', array('courseid'=>$this->_customdata['courseid'])) != 1){
+            $mform->addElement('static', 'warning', "Aviso de configuração", "O debate crítico não foi configurado ainda no curso. Para configurar, preencha os campos abaixo.");
+        }
 
         $mform->addElement('header', 'generalhdr', get_string('general'));
 
@@ -53,7 +57,7 @@ class problemsection_form extends moodleform {
         $mform->addElement('editor', 'summary', get_string('summary'));
         $mform->addHelpButton('summary', 'summary', 'local_problemsection');
         $mform->setType('summary', PARAM_RAW);
-
+        
         $mform->addElement('editor', 'directions', get_string('directions', 'local_problemsection'));
         $mform->addHelpButton('directions', 'directions', 'local_problemsection');
         $mform->setType('directions', PARAM_RAW);
@@ -62,21 +66,22 @@ class problemsection_form extends moodleform {
         $mform->addElement('date_time_selector', 'datefrom', get_string('allowsubmissionsfromdate', 'assign'));
         $mform->addElement('date_time_selector', 'dateto', get_string('duedate', 'assign'));
 
-        $mform->addElement('header', 'communicationhdr', get_string('communicationtools', 'local_problemsection'));
-        foreach ($this->_customdata['tools'] as $tool) {
-            $picture = '<img src="'.$OUTPUT->pix_url('icon', "mod_$tool").'">';
-            $mform->addElement('advcheckbox', $tool, get_string('pluginname', $tool), $picture);
-        }
+        $mform->addElement('header', 'generalhdr', "Carta de apresentação");
 
-        $mform->addElement('header', 'groupinghdr', get_string('grouping', 'group'));
+        $mform->addElement('editor', 'frontpagedescription', "Apresentação geral");
+        $mform->setType('frontpagedescription', PARAM_RAW);
+        $mform->addRule('frontpagedescription', get_string('required'), 'required', null, 'client');
+        
+        $mform->addElement('editor', 'pagecontent', "Instruções do exercício");
+        $mform->setType('pagecontent', PARAM_RAW);
+        $mform->addRule('pagecontent', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('select', 'copygrouping', get_string('copygrouping', 'local_problemsection'),
-                            $this->_customdata['copygrouping']);
+        $mform->addElement('header', 'groupsizehdr', "Tamaho dos grupos de estratégia");
+        $mform->addElement('static', 'description', "Grupo", "Determina o tamanho <b>máximo</b> dos alunos por grupo. <br>Evite colocar números altos, pois, se o número de alunos for inferior ao valor de corte, o sistema retornará <i>erro</i>. <br> Padrão do sistema: 4 alunos por grupo. <br> Instrução para preenchimento: apenas números acima de zero são permitidos.");
 
-        $mform->addElement('text', 'nbgroups', get_string('nbgroups', 'local_problemsection'), array('size' => '2'));
-        $mform->setType('nbgroups', PARAM_INT);
-        $mform->setDefault('nbgroups', 1);
-        $mform->disabledIf('nbgroups', 'copygrouping', 'neq', 0);
+        $mform->addElement('text', 'groupsize', "Tamanho dos grupos");
+        $mform->setType('name', PARAM_INT);
+        $mform->setDefault('groupsize', 4);
 
         $mform->addElement('hidden', 'courseid', $this->_customdata['courseid']);
         $mform->setType('courseid', PARAM_INT);

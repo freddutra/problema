@@ -35,6 +35,7 @@
 defined('MOODLE_INTERNAL') || die();
 require_once("$CFG->dirroot/course/lib.php");
 require_once($CFG->dirroot.'/group/lib.php');
+require_once($CFG->dirroot. '/mod/forum/lib.php');
 require_once('test.php');
 
 // -----------------------------------------------------------------------------
@@ -113,6 +114,8 @@ function local_problemsection_addgroups($data, $context, $groupingid) {
  * @return int
  */
 function local_problemsection_create($data) {
+    global $DB;
+
     $context = context_course::instance($data->courseid);
     require_capability('moodle/course:update', $context);
     require_capability('local/problemsection:addinstance', $context);
@@ -121,6 +124,69 @@ function local_problemsection_create($data) {
     local_problemsection_addgroups($data, $context, $groupingid);
     $sequence = local_problemsection_createmodules($section, $groupingid, $data, $context);
     $problemsectionid = local_problemsection_record($data, $section, $groupingid, $sequence);
+
+    // carta de apresentação
+    $presentation = new stdClass();
+    $presentation->course = $data->courseid;
+    $presentation->name = "Carta de apresentação";
+    $presentation->intro = $data->frontpagedescription['text'];
+    $presentation->introformat = 1;
+    $presentation->content = $data->pagecontent['text'];
+    $presentation->contentformat = 1;
+    $presentation->displayoptions = 'a:2:{s:12:"printheading";s:1:"1";s:10:"printintro";s:1:"0";}';
+    $presentation->timemodified = time();
+    $newpageid = $DB->insert_record('page', $presentation, true); 
+    $mod = new stdClass();
+    $mod->course = $data->courseid;
+    $mod->module = 15;
+    $mod->instance = $newpageid;
+    $mod->section = 0;
+    $mod->added = time();
+    $mod->id = add_course_module($mod);
+    $sectionid = course_add_cm_to_section($data->courseid, $mod->id, $section->section);
+    $DB->set_field("course_modules", "section", $sectionid, array("id" => $mod->id));
+    //rebuild_course_cache($data->courseid);
+
+    // Quiz
+    $quiz = new stdClass();
+    $quiz->course = $data->courseid;
+    $quiz->name = "Quiz para Debate crítico";
+    $quiz->intro = "";
+    $quiz->introformat = 1;
+    $quiz->display = 0;
+    $quiz->includeinactive = 0;
+    $quiz->timemodified = time();
+    $quiz->id = $DB->insert_record('choice', $quiz);
+
+    // Options
+    $DB->insert_record('choice_options', array('choiceid'=>$quiz->id, 'text'=>"A favor do tema.", "timemodified"=>time()));
+    $DB->insert_record('choice_options', array('choiceid'=>$quiz->id, 'text'=>"Contra o tema.", "timemodified"=>time()));
+
+    $quizmod = new stdClass();
+    $quizmod->course = $data->courseid;
+    $quizmod->module = 5;
+    $quizmod->instance = $quiz->id;
+    $quizmod->section = 0;
+    $quizmod->added = time();
+    $quizmod->id = add_course_module($quizmod);
+
+    $quizsectionid = course_add_cm_to_section($data->courseid, $quizmod->id, $section->section);
+    $DB->set_field("course_modules", "section", $quizsectionid, array("id" => $quizmod->id));
+    //rebuild_course_cache($courseid);
+
+    $getquizid = $DB->get_record("course_modules", array("id" => $quizmod->id));
+
+    //Armazena dados no DB
+    $statusdata = new stdClass();
+    $statusdata->courseid = $data->courseid;
+    $statusdata->sessionid = $section->section;
+    $statusdata->quizid = $getquizid->instance;
+    $statusdata->forumdiscussionid = 0;
+    $statusdata->studentspergroup = $data->groupsize; // Set students per group
+    $DB->insert_record('local_problemsection_status', $statusdata);
+
+    //print_r($statusdata);
+
     return $problemsectionid;
 }
 

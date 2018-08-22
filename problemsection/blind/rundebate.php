@@ -71,7 +71,8 @@ require_capability('local/problemsection:addinstance', $context);
 
 // Header code.
 //$pageurl = new moodle_url('/local/problemsection/problemsection.php', array('id' => $courseid));
-$pageurl = new moodle_url('/local/problemsection/blind/rundebate.php', array('id' => $courseid, 'sectionid'=>$sectionid));
+//$pageurl = new moodle_url('/local/problemsection/blind/rundebate.php', array('id' => $courseid, 'sectionid'=>$sectionid));
+$pageurl = new moodle_url('/local/problemsection/blind/rundebate.php', array('id' => $courseid));
 $PAGE->set_url($pageurl);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_course($course);
@@ -82,16 +83,20 @@ $PAGE->set_heading($pagetitle);
 
 $courseurl = new moodle_url('/course/view.php', array('id' => $courseid));
 try{
-    //echo "<pre>";
+    ///echo "<pre>";
+    $getmodulestatusid = $DB->get_record('local_problemsection_status', array('courseid'=>$courseid));
     
     // First step: create forum
-    $forum = create_forum($courseid, $sectionid); //OK
+    $forum = create_forum($courseid, $sectionid, "Forum de estratégia"); //OK
+    $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'forumcreated'=>1));
 
     // Second step: create subgroups from quiz
     create_debate_groups($courseid); // OK (so-so)
+    $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'groupscreated'=>1));
 
     // Third step: create topics (with privacy)
     create_debate_topics($courseid, $forum); // OK
+    $DB->update_record('local_problemsection_status', array('id'=>$getmodulestatusid->id, 'postscreated'=>1));
 
     //echo "</pre>";
     header("Location: ../manage.php?id=$courseid&psid=");
